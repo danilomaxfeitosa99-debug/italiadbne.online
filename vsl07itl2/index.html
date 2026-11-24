@@ -318,31 +318,17 @@
 
 <script>
 (function() {
-  // Pega a query string (tudo depois do "?")
-  const query = window.location.search;
-  if (!query) return;
-
-  // Seleciona todos os links da página
-  const links = document.querySelectorAll('a[href]');
-
-  links.forEach(link => {
+  // Passa a query string da pagina para os links, SEM duplicar parametros que o link ja tem
+  const params = new URLSearchParams(window.location.search);
+  if (Array.from(params).length === 0) return;
+  document.querySelectorAll('a[href]').forEach(link => {
     const href = link.getAttribute('href');
-
-    // Ignora âncoras, javascript:void(0), e-mail e tel links
-    if (
-      !href ||
-      href.startsWith('#') ||
-      href.startsWith('mailto:') ||
-      href.startsWith('tel:')
-    ) return;
-
-    // Se o link já tiver UTMs, não duplica
-    const newHref = href.includes('?')
-      ? href + '&' + query.substring(1)
-      : href + query;
-
-    // Atualiza o link com as UTMs
-    link.setAttribute('href', newHref);
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
+    try {
+      const u = new URL(href, window.location.href);
+      params.forEach((value, key) => { if (!u.searchParams.has(key)) u.searchParams.set(key, value); });
+      link.setAttribute('href', u.toString());
+    } catch (e) {}
   });
 })();
 </script>
